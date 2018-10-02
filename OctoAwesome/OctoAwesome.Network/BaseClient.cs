@@ -80,7 +80,7 @@ namespace OctoAwesome.Network
                 if (Socket.SendAsync(sendArgs))
                     return;
 
-                ArrayPool<byte>.Shared.Return(data);
+                //ArrayPool<byte>.Shared.Return(data);
 
                 lock (sendLock)
                 {
@@ -104,7 +104,7 @@ namespace OctoAwesome.Network
             byte[] data;
             int len;
 
-            ArrayPool<byte>.Shared.Return(e.Buffer);
+            //ArrayPool<byte>.Shared.Return(e.Buffer);
 
             lock (sendLock)
             {

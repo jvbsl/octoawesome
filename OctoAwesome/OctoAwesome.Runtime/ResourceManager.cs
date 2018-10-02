@@ -87,7 +87,8 @@ namespace OctoAwesome.Runtime
         /// <returns>Die Liste der Universen.</returns>
         public IUniverse[] ListUniverses()
         {
-            return persistenceManager.ListUniverses().Result;
+            persistenceManager.Load(out var universes).WaitOn();
+            return universes.ToArray();
         }
 
         /// <summary>
@@ -102,7 +103,8 @@ namespace OctoAwesome.Runtime
                 UnloadUniverse();
 
             // Neuen Daten loaden/generieren
-            CurrentUniverse = persistenceManager.LoadUniverse(universeId).Result;
+            persistenceManager.Load(out var universe, universeId).WaitOn();
+            CurrentUniverse = universe;
             if (CurrentUniverse == null)
                 throw new Exception();
         }
@@ -162,7 +164,7 @@ namespace OctoAwesome.Runtime
             if (!planets.TryGetValue(id, out planet))
             {
                 // Versuch vorhandenen Planeten zu laden
-                planet = persistenceManager.LoadPlanet(CurrentUniverse.Id, id).Result;
+                persistenceManager.Load(out planet, CurrentUniverse.Id, id)?.WaitOn();
                 if (planet == null)
                 {
                     // Keiner da -> neu erzeugen
@@ -191,7 +193,8 @@ namespace OctoAwesome.Runtime
             if (CurrentUniverse == null)
                 throw new Exception("No Universe loaded");
 
-            Player player = persistenceManager.LoadPlayer(CurrentUniverse.Id, playername).Result;
+            Player player;
+            persistenceManager.Load(out player, CurrentUniverse.Id, playername)?.WaitOn();
             if (player == null)
             {
                 player = new Player();
@@ -216,7 +219,8 @@ namespace OctoAwesome.Runtime
             IPlanet planet = GetPlanet(planetId);
 
             // Load from disk
-            IChunkColumn column11 = persistenceManager.LoadColumn(CurrentUniverse.Id, planet, index).Result;
+            IChunkColumn column11;
+            persistenceManager.Load(out column11, CurrentUniverse.Id, planet, index)?.WaitOn();
             if (column11 == null)
             {
                 IChunkColumn column = planet.Generator.GenerateColumn(DefinitionManager, planet, new Index2(index.X, index.Y));

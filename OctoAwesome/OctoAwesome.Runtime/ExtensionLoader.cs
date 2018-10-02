@@ -80,7 +80,7 @@ namespace OctoAwesome.Runtime
             {
                 foreach (var type in assembly.GetTypes())
                 {
-                    if (!typeof(IExtension).IsAssignableFrom(type))
+                    if (type.IsAbstract || !typeof(IExtension).IsAssignableFrom(type))
                         continue;
 
                     try

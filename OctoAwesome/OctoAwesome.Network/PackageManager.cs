@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace OctoAwesome.Network
 {
@@ -16,12 +13,10 @@ namespace OctoAwesome.Network
         public PackageManager()
         {
             packages = new Dictionary<BaseClient, Package>();
+            ConnectedClients = new List<BaseClient>();
         }
 
-        public void AddConnectedClient(BaseClient client)
-        {
-            client.DataAvailable += ClientDataAvailable;
-        }
+        public void AddConnectedClient(BaseClient client) => client.DataAvailable += ClientDataAvailable;
 
         public void SendPackage(Package package, BaseClient client)
         {
@@ -32,10 +27,9 @@ namespace OctoAwesome.Network
 
         private void ClientDataAvailable(object sender, OctoNetworkEventArgs e)
         {
-            Package package;
-            var baseClient = (BaseClient)sender; 
+            var baseClient = (BaseClient)sender;
             byte[] bytes = new byte[e.DataCount];
-            if (!packages.TryGetValue(baseClient, out package))
+            if (!packages.TryGetValue(baseClient, out Package package))
             {
                 package = new Package();
                 packages.Add(baseClient, package);
