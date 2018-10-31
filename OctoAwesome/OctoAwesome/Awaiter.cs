@@ -11,8 +11,8 @@ namespace OctoAwesome
     public class Awaiter
     {
         public ISerializable Serializable { get; set; }
-        private ManualResetEventSlim manualReset;
-        bool alreadyDeserialzed = false;
+        private readonly ManualResetEventSlim manualReset;
+        private bool alreadyDeserialized;
 
         public Awaiter()
         {
@@ -21,9 +21,17 @@ namespace OctoAwesome
 
         public ISerializable WaitOn()
         {
-            if (!alreadyDeserialzed)
+            if (!alreadyDeserialized)
                 manualReset.Wait();
+
             return Serializable;
+        }
+
+        public void SetResult(ISerializable serializable)
+        {
+            Serializable = serializable;
+            manualReset.Set();
+            alreadyDeserialized = true;
         }
 
         public void SetResult(byte[] bytes, IDefinitionManager definitionManager)
@@ -34,14 +42,7 @@ namespace OctoAwesome
                 Serializable.Deserialize(reader, definitionManager);
             }
             manualReset.Set();
-            alreadyDeserialzed = true;
+            alreadyDeserialized = true;
         }
-        public void SetResult(ISerializable serializable)
-        { 
-            Serializable = serializable;
-            manualReset.Set();
-            alreadyDeserialzed = true;
-        }
-
     }
 }

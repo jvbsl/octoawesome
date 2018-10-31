@@ -55,7 +55,7 @@ namespace OctoAwesome
         /// <param name="planet">Index des Planeten.</param>
         /// <param name="columnIndex">Zu serialisierende ChunkColumn.</param>
         /// <returns>Die neu geladene ChunkColumn.</returns>
-        Awaiter Load(out IChunkColumn chunkColumn, Guid universeGuid, IPlanet planet, Index2 columnIndex);
+        Awaiter Load(out IChunkColumn column, Guid universeGuid, IPlanet planet, Index2 columnIndex);
 
         /// <summary>
         /// Speichert eine <see cref="IChunkColumn"/>.

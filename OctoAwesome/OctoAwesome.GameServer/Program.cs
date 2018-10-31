@@ -1,8 +1,11 @@
-﻿using System;
+﻿using CommandManagementSystem;
+using NLog;
+using NLog.Config;
+using NLog.Targets;
+using OctoAwesome.Network;
+using System;
 using System.Net;
 using System.Threading;
-using CommandManagementSystem;
-using OctoAwesome.Network;
 
 namespace OctoAwesome.GameServer
 {
@@ -11,37 +14,28 @@ namespace OctoAwesome.GameServer
         public static ServerHandler ServerHandler { get; set; }
 
         private static ManualResetEvent manualResetEvent;
-        private static DefaultCommandManager<ushort, byte[], byte[]> defaultManager;
-        private static Server server;
-        private static PackageManager packageManager;
+        private static Logger logger;
 
         private static void Main(string[] args)
         {
-            defaultManager = new DefaultCommandManager<ushort, byte[], byte[]>(typeof(Program).Namespace + ".Commands");
+            var config = new LoggingConfiguration();
+
+            config.AddRule(LogLevel.Debug, LogLevel.Fatal, new ColoredConsoleTarget("octoawesome.logconsole"));
+            config.AddRule(LogLevel.Trace, LogLevel.Fatal, new FileTarget("octoawesome.logfile") { FileName = "server.log" });
+
+            LogManager.Configuration = config;
+            logger = LogManager.GetCurrentClassLogger(typeof(Program));
+            
             manualResetEvent = new ManualResetEvent(false);
-            server = new Server();
-            packageManager = new PackageManager();
-            packageManager.PackageAvailable += PackageManagerPackageAvailable;
-            server.OnClientConnected += ServerOnClientConnected;
-            Console.WriteLine("Server start");
-            ServerHandler = new ServerHandler(server);
-            server.Start(IPAddress.Any, 8888);
+                        
+            logger.Info("Server start");
+            ServerHandler = new ServerHandler();
+            ServerHandler.Start();
 
             Console.CancelKeyPress += (s, e) => manualResetEvent.Set();
             manualResetEvent.WaitOne();
         }
 
-        private static void PackageManagerPackageAvailable(object sender, OctoPackageAvailableEventArgs e)
-        {
-            e.Package.Payload = defaultManager.Dispatch(e.Package.Command, e.Package.Payload);
-            Console.WriteLine(e.Package.Command);
-            packageManager.SendPackage(e.Package, e.BaseClient);
-        }
-
-        private static void ServerOnClientConnected(object sender, ConnectedClient e)
-        {
-            Console.WriteLine("Hurra ein neuer Spieler");
-            packageManager.AddConnectedClient(e);
-        }
+        
     }
 }

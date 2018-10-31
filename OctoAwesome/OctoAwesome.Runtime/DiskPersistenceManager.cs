@@ -143,7 +143,6 @@ namespace OctoAwesome.Runtime
                 if (Guid.TryParse(id, out Guid guid))
                     universes.Add((IUniverse)Load(out var universe, guid).WaitOn());
             }
-
             awaiter.SetResult(universes);
 
             return awaiter;
@@ -157,18 +156,17 @@ namespace OctoAwesome.Runtime
         public Awaiter Load(out IUniverse universe, Guid universeGuid)
         {
             string file = Path.Combine(GetRoot(), universeGuid.ToString(), UniverseFilename);
-            universe = null;
+            universe = new Universe();
             if (!File.Exists(file))
                 return null;
-
-            var awaiter = new Awaiter();
-            universe = new Universe();
-            awaiter.Serializable = universe;
+            var tcs = new CustomAwaiter();
 
             using (Stream stream = File.Open(file, FileMode.Open, FileAccess.Read))
             using (GZipStream zip = new GZipStream(stream, CompressionMode.Decompress))
             using (var reader = new BinaryReader(zip))
             {
+                var awaiter = new Awaiter();
+                awaiter.Serializable = universe;
                 universe.Deserialize(reader, null);
                 awaiter.SetResult(universe);
                 return awaiter;
@@ -186,7 +184,7 @@ namespace OctoAwesome.Runtime
         {
             string file = Path.Combine(GetRoot(), universeGuid.ToString(), planetId.ToString(), PlanetFilename);
             string generatorInfo = Path.Combine(GetRoot(), universeGuid.ToString(), planetId.ToString(), PlanetGeneratorInfo);
-            planet = null;
+            planet = new Planet();
             if (!File.Exists(generatorInfo) || !File.Exists(file))
                 return null;
 
@@ -209,7 +207,6 @@ namespace OctoAwesome.Runtime
                 using (GZipStream zip = new GZipStream(stream, CompressionMode.Decompress))
                 {
                     var awaiter = new Awaiter();
-                    planet = new Planet();
                     awaiter.Serializable = planet;
                     awaiter.SetResult(generator.GeneratePlanet(zip));
                     return awaiter;
@@ -224,11 +221,10 @@ namespace OctoAwesome.Runtime
         /// <param name="planet">Index des Planeten.</param>
         /// <param name="columnIndex">Zu serialisierende ChunkColumn.</param>
         /// <returns>Die neu geladene ChunkColumn.</returns>
-        public Awaiter Load(out IChunkColumn chunkColumn, Guid universeGuid, IPlanet planet, Index2 columnIndex)
+        public Awaiter Load(out IChunkColumn column, Guid universeGuid, IPlanet planet, Index2 columnIndex)
         {
             string file = Path.Combine(GetRoot(), universeGuid.ToString(), planet.Id.ToString(), string.Format(ColumnFilename, columnIndex.X, columnIndex.Y));
-            chunkColumn = null;
-
+            column = new ChunkColumn();
             if (!File.Exists(file))
                 return null;
 
@@ -239,8 +235,7 @@ namespace OctoAwesome.Runtime
                     using (GZipStream zip = new GZipStream(stream, CompressionMode.Decompress))
                     {
                         var awaiter = new Awaiter();
-                        chunkColumn = new ChunkColumn();
-                        awaiter.Serializable = chunkColumn;
+                        awaiter.Serializable = column;
                         awaiter.SetResult(planet.Generator.GenerateColumn(zip, definitionManager, planet.Id, columnIndex));
                         return awaiter;
                     }
@@ -267,7 +262,7 @@ namespace OctoAwesome.Runtime
         {
             //TODO: Später durch Playername ersetzen
             string file = Path.Combine(GetRoot(), universeGuid.ToString(), "player.info");
-            player = null;
+            player = new Player();
             if (!File.Exists(file))
                 return null;
 
@@ -277,7 +272,6 @@ namespace OctoAwesome.Runtime
                 {
                     try
                     {
-                        player = new Player();
                         var awaiter = new Awaiter();
                         awaiter.Serializable = player;
                         player.Deserialize(reader, definitionManager);
