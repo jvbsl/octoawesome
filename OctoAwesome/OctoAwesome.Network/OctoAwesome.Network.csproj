@@ -62,9 +62,6 @@
     <Compile Include="SimulationManager.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="app.config" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\OctoAwesome.Basics\OctoAwesome.Basics.csproj">
       <Project>{739F0779-A605-49C9-A298-FE30DC628C9E}</Project>
       <Name>OctoAwesome.Basics</Name>
@@ -81,6 +78,9 @@
   <ItemGroup>
     <PackageReference Include="engenious">
       <Version>0.2.0-alpha</Version>
+    </PackageReference>
+    <PackageReference Include="NLog">
+      <Version>4.5.10</Version>
     </PackageReference>
     <PackageReference Include="System.Buffers">
       <Version>4.5.0</Version>

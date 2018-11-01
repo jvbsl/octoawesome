@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading;
+using NLog;
 using OctoAwesome.Basics;
 
 namespace OctoAwesome.Network
@@ -11,7 +12,7 @@ namespace OctoAwesome.Network
     {
         private Client client;
         private readonly IDefinitionManager definitionManager;
-
+        private readonly Logger logger;
         private Dictionary<uint, Awaiter> packages;
 
         public NetworkPersistenceManager(IDefinitionManager definitionManager)
@@ -20,6 +21,7 @@ namespace OctoAwesome.Network
             client.PackageAvailable += ClientPackageAvailable;
             packages = new Dictionary<uint, Awaiter>();
             this.definitionManager = definitionManager;
+            logger = LogManager.GetCurrentClassLogger();
         }
 
 
@@ -142,8 +144,10 @@ namespace OctoAwesome.Network
 
         private void ClientPackageAvailable(object sender, Package e)
         {
+            logger.Trace($"New package available: Id={e.UId} Command = {e.Command} PayloadSize = {e.Payload.Length}");
             if (packages.TryGetValue(e.UId, out var awaiter))
             {
+                logger.Trace($"Find awaiter for {e.UId}");
                 awaiter.SetResult(e.Payload, definitionManager);
             }
         }

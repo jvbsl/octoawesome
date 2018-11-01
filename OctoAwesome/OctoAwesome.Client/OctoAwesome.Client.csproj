@@ -201,6 +201,9 @@
     <PackageReference Include="engenious">
       <Version>0.2.0-alpha</Version>
     </PackageReference>
+    <PackageReference Include="NLog">
+      <Version>4.5.10</Version>
+    </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

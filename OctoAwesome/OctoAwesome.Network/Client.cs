@@ -1,15 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Collections;
-using System.IO;
-using System.Net.Sockets;
-using System.Threading.Tasks;
 using System.Buffers;
-using System.Net;
-using System.Text;
+using System.Collections;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Threading;
+using System.Net;
 using System.Net.NetworkInformation;
+using System.Net.Sockets;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace OctoAwesome.Network
 {
@@ -19,7 +19,7 @@ namespace OctoAwesome.Network
         public event EventHandler<Package> PackageAvailable;
 
         private Package currentPackage;
-        private static int clientReceived;
+        private static readonly int clientReceived;
 
         public Client() :
             base(new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
@@ -53,7 +53,7 @@ namespace OctoAwesome.Network
             while (true)
             {
                 if (Socket.ReceiveAsync(ReceiveArgs))
-                    return; 
+                    return;
 
                 Receive(ReceiveArgs);
             }
@@ -61,8 +61,10 @@ namespace OctoAwesome.Network
 
         internal void SendPackage(Package package)
         {
+            logger.Trace($"Send package Id = {package.UId} Command={package.Command} PayloadSize = {package.Payload.Length}");
             byte[] bytes = new byte[package.Payload.Length + Package.HEAD_LENGTH];
             package.SerializePackage(bytes);
+
             SendAsync(bytes, bytes.Length);
         }
 
@@ -72,6 +74,7 @@ namespace OctoAwesome.Network
             if (currentPackage == null)
             {
                 currentPackage = new Package();
+                logger.Trace("CurrentPackage is null, create new package: " + currentPackage.UId);
                 if (e.DataCount >= Package.HEAD_LENGTH)
                 {
                     e.NetworkStream.Read(bytes, 0, Package.HEAD_LENGTH);

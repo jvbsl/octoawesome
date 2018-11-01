@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NLog;
+using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Net.Sockets;
@@ -18,18 +19,20 @@ namespace OctoAwesome.Network
 
         protected readonly OctoNetworkStream internalSendStream;
         protected readonly OctoNetworkStream internalRecivedStream;
+        protected readonly Logger logger;
 
         private byte readSendQueueIndex;
         private byte nextSendQueueWriteIndex;
         private bool sending;
         private readonly List<IObserver<OctoNetworkEventArgs>> observers;
         private readonly SocketAsyncEventArgs sendArgs;
-
         private readonly (byte[] data, int len)[] sendQueue;
         private readonly object sendLock;
 
         protected BaseClient(Socket socket)
         {
+            logger = LogManager.GetCurrentClassLogger();
+
             sendQueue = new (byte[] data, int len)[256];
             sendLock = new object();
 
@@ -62,6 +65,7 @@ namespace OctoAwesome.Network
 
         public void SendAsync(byte[] data, int len)
         {
+            logger.Trace("Send async length " + len);
             lock (sendLock)
             {
                 if (sending)
@@ -136,6 +140,8 @@ namespace OctoAwesome.Network
         {
             if (e.BytesTransferred < 1)
                 return;
+
+            logger.Trace($"Data Received: Transferred Data = {e.BytesTransferred}");
 
             int offset = 0;
             int count = 0;

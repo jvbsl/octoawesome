@@ -24,7 +24,7 @@ namespace OctoAwesome.GameServer
             config.AddRule(LogLevel.Trace, LogLevel.Fatal, new FileTarget("octoawesome.logfile") { FileName = "server.log" });
 
             LogManager.Configuration = config;
-            logger = LogManager.GetCurrentClassLogger(typeof(Program));
+            logger = LogManager.GetCurrentClassLogger();
             
             manualResetEvent = new ManualResetEvent(false);
                         

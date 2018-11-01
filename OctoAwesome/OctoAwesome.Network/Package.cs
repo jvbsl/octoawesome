@@ -10,7 +10,7 @@ namespace OctoAwesome.Network
         public const int HEAD_LENGTH = sizeof(ushort) + sizeof(int) + sizeof(uint);
 
         public static uint NextUId => nextUid++;
-        private static uint nextUid; 
+        private static uint nextUid;
         public ushort Command { get; set; }
 
         public byte[] Payload { get; set; }
@@ -27,8 +27,15 @@ namespace OctoAwesome.Network
             Payload = new byte[size];
         }
 
-        public Package() 
-            => UId = NextUId;
+        public Package() : this(true)
+        {
+        }
+
+        public Package(bool setUid)
+        {
+            if (setUid)
+                UId = NextUId;
+        }
 
         public Package(byte[] data) : this(0, data.Length)
         {
@@ -63,6 +70,9 @@ namespace OctoAwesome.Network
             internalOffset = Payload.Length;
         }
 
+        public int PayloadRest()
+            => Payload.Length - internalOffset;
+
         public int SerializePackage(byte[] buffer)
         {
             buffer[0] = (byte)(Command >> 8);
@@ -74,6 +84,6 @@ namespace OctoAwesome.Network
             Buffer.BlockCopy(Payload, 0, buffer, HEAD_LENGTH, Payload.Length); //Payload.Serialize();
             return Payload.Length + HEAD_LENGTH;
         }
-        
+
     }
 }

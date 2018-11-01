@@ -1,5 +1,6 @@
 ﻿using CommandManagementSystem.Attributes;
 using engenious;
+using NLog;
 using OctoAwesome.EntityComponents;
 using OctoAwesome.Network;
 using System;
@@ -13,11 +14,20 @@ namespace OctoAwesome.GameServer.Commands
 {
     public static class PlayerCommands
     {
+        private static Logger logger;
+
+        static PlayerCommands()
+        {
+            logger = LogManager.GetCurrentClassLogger();
+        }
+
         [Command((ushort)OfficialCommands.Whoami)]
         public static byte[] Whoami(byte[] data)
         {
             string playername = Encoding.UTF8.GetString(data);
             var player = new Player();
+
+            logger.Trace("Whoami frägt " + playername);
 
             player.Components.AddComponent(new PositionComponent { Position = new Coordinate(0, new Index3(0, 0, 0), new Vector3(0, 0, 0)) });
 

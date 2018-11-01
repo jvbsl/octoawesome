@@ -1,4 +1,7 @@
 ﻿#region Using Statements
+using NLog;
+using NLog.Config;
+using NLog.Targets;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,18 +16,32 @@ namespace OctoAwesome.Client
     public static class Program
     {
         static OctoGame game;
+        private static Logger logger;
+
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
         static void Main()
         {
+            var config = new LoggingConfiguration();
+
+            config.AddRule(LogLevel.Debug, LogLevel.Fatal, new ColoredConsoleTarget("octoawesome.logconsole"));
+            config.AddRule(LogLevel.Trace, LogLevel.Fatal, new FileTarget("octoawesome.logfile") { FileName = "client.log" });
+
+            LogManager.Configuration = config;
+            logger = LogManager.GetCurrentClassLogger();
+
+            logger.Info("Start game");
+
             using (game = new OctoGame())
                 game.Run(60,60);
         }
 
         public static void Restart()
         {
+            logger.Info("Restart game");
+
             game.Exit();
             using (game = new OctoGame())
                 game.Run(60,60);

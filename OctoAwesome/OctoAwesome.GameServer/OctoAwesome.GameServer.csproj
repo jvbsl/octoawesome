@@ -56,9 +56,6 @@
     <Compile Include="ServerHandler.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\OctoAwesome.Network\OctoAwesome.Network.csproj">
       <Project>{B1F4D7BB-7F56-4E96-87DD-EBEBAE9CF336}</Project>
       <Name>OctoAwesome.Network</Name>

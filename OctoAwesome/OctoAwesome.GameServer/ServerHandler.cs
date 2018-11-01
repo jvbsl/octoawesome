@@ -18,7 +18,7 @@ namespace OctoAwesome.GameServer
         private readonly Server server;
         private readonly PackageManager packageManager;
         private readonly DefaultCommandManager<ushort, byte[], byte[]> defaultManager;
-                
+
         public ServerHandler()
         {
             logger = LogManager.GetCurrentClassLogger();
@@ -31,19 +31,23 @@ namespace OctoAwesome.GameServer
 
         public void Start()
         {
+            logger.Debug("Start server handler");
             server.Start(IPAddress.Any, 8888);
-            packageManager.PackageAvailable += PackageManagerPackageAvailable;
             server.OnClientConnected += ServerOnClientConnected;
+
+            packageManager.PackageAvailable += PackageManagerPackageAvailable;
+            packageManager.StartProcessing();
+
         }
 
         private void PackageManagerPackageAvailable(object sender, OctoPackageAvailableEventArgs e)
         {
             if (e.Package.Command == 0 && e.Package.Payload.Length == 0)
             {
-                logger.Debug("Received null package");
+                logger.Error("Received a null package");
                 return;
             }
-            logger.Trace("Received a new Package with ID: " + e.Package.UId);
+            logger.Trace($"Received a new Package ID = {e.Package.UId} Command = {e.Package.Command} PayloadSize = {e.Package.Payload.Length}");
             try
             {
                 e.Package.Payload = defaultManager.Dispatch(e.Package.Command, e.Package.Payload) ?? new byte[0];
@@ -54,7 +58,6 @@ namespace OctoAwesome.GameServer
                 return;
             }
 
-            logger.Trace(e.Package.Command);
             packageManager.SendPackage(e.Package, e.BaseClient);
         }
 
