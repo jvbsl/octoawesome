@@ -12,7 +12,6 @@ namespace OctoAwesome.Network
     public class PackageManager : IObserver<OctoNetworkEventArgs>
     {
         public List<BaseClient> ConnectedClients { get; set; }
-        private Dictionary<BaseClient, Package> packages;
         public event EventHandler<OctoPackageAvailableEventArgs> PackageAvailable;
 
 
@@ -35,7 +34,7 @@ namespace OctoAwesome.Network
 
         public void AddConnectedClient(BaseClient client)
         {
-           subsciptions.Add((Subscription<OctoNetworkEventArgs>)client.Subscribe(this));
+            subsciptions.Add((Subscription<OctoNetworkEventArgs>)client.Subscribe(this));
         }
 
         public void SendPackage(Package package, BaseClient client)
@@ -74,7 +73,8 @@ namespace OctoAwesome.Network
 
                 if (receivingQueue.TryDequeue(out OctoNetworkEventArgs eventArgs))
                     ClientDataAvailable(eventArgs);
-                logger.Trace($"Dequeue recived data: RestQueue: {receivedQue.Count}");
+
+                logger.Trace($"Dequeue recived data: RestQueue: {receivingQueue.Count}");
             }
         }
 
@@ -110,7 +110,6 @@ namespace OctoAwesome.Network
                     e.NetworkStream.Read(bytes, offset, data);
                     backupStream.Write(bytes, 0, data);
                     backupStream.Position = 0;
-                    logger.Error($"ID = {package.UId} Package was not complete, only got: {current} bytes");
                     return;
                 }
 
@@ -150,8 +149,10 @@ namespace OctoAwesome.Network
                 PackageAvailable?.Invoke(this, new OctoPackageAvailableEventArgs { BaseClient = baseClient, Package = package });
 
                 if (e.DataCount - count > 0)
-                logger.Trace($"Rest data after package {package.UId}: " + (e.DataCount - count));
-                ClientDataAvailable(new OctoNetworkEventArgs() { Client = baseClient, DataCount = e.DataCount - count, NetworkStream = e.NetworkStream });
+                {
+                    logger.Trace($"Rest data after package {package.UId}: " + (e.DataCount - count));
+                    ClientDataAvailable(new OctoNetworkEventArgs() { Client = baseClient, DataCount = e.DataCount - count, NetworkStream = e.NetworkStream });
+                }
             }
 
             logger.Trace($"ID = {package.UId} Data Read: " + count);

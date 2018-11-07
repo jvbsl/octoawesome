@@ -85,24 +85,7 @@ namespace OctoAwesome.Network
 
             return 1;
         }
-
-
-        public int DataAvailable(int count)
-        {
-            if (!writingProcess)
-                SwapBuffer();
-
-            var maxCopy = maxReadCount - readPosition;
-
-            if (maxCopy < 1)
-                return maxCopy;
-
-            if (maxCopy < count)
-                count = maxCopy;
-
-            return count;
-        }
-
+             
         public int Read(byte[] buffer, int offset, int count)
         {
             if (!writingProcess)

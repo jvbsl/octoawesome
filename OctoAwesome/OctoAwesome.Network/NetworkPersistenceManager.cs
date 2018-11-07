@@ -1,10 +1,10 @@
-﻿using System;
+﻿using NLog;
+using OctoAwesome.Basics;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading;
-using NLog;
-using OctoAwesome.Basics;
 
 namespace OctoAwesome.Network
 {
@@ -30,7 +30,7 @@ namespace OctoAwesome.Network
         }
 
 
-        public NetworkPersistenceManager(string host, ushort port, IDefinitionManager definitionManager) 
+        public NetworkPersistenceManager(string host, ushort port, IDefinitionManager definitionManager)
             : this(definitionManager)
         {
             client.Connect(host, port);
@@ -147,18 +147,23 @@ namespace OctoAwesome.Network
                 chunkColumn.Serialize(bw, definitionManager);
                 package.Payload = ms.ToArray();
             }
-            
 
-            client.SendPackage(package); 
+
+            client.SendPackage(package);
         }
 
         private void ClientPackageAvailable(object sender, OctoPackageAvailableEventArgs e)
         {
-            logger.Trace($"New package available: Id={e.UId} Command = {e.Command} PayloadSize = {e.Payload.Length}");
+            logger.Trace($"New package available: Id={e.Package.UId} Command = {e.Package.Command} PayloadSize = {e.Package.Payload.Length}");
             if (packages.TryGetValue(e.Package.UId, out var awaiter))
             {
-                logger.Trace($"Find awaiter for {e.UId}");
+                logger.Trace($"Find awaiter for {e.Package.UId}");
                 awaiter.SetResult(e.Package.Payload, definitionManager);
+                packages.Remove(e.Package.UId);
+            }
+            else
+            {
+                logger.Info($"No awaiter for {e.Package.UId}");
             }
         }
 

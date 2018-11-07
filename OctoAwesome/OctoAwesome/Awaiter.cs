@@ -14,6 +14,7 @@ namespace OctoAwesome
         private readonly ManualResetEventSlim manualReset;
         private bool alreadyDeserialized;
 
+
         public Awaiter()
         {
             manualReset = new ManualResetEventSlim(false);
@@ -22,10 +23,14 @@ namespace OctoAwesome
         public ISerializable WaitOn()
         {
             if (!alreadyDeserialized)
-                manualReset.Wait();
+            {
+                manualReset.Wait(10000);
+            }
+
 
             return Serializable;
         }
+
 
         public void SetResult(ISerializable serializable)
         {
@@ -43,6 +48,6 @@ namespace OctoAwesome
             }
             manualReset.Set();
             alreadyDeserialized = true;
-        }
+        }       
     }
 }
