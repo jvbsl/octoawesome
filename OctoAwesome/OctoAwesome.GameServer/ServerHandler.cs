@@ -31,13 +31,12 @@ namespace OctoAwesome.GameServer
 
         public void Start()
         {
+            packageManager.PackageAvailable += PackageManagerPackageAvailable;
+            packageManager.Start();
+
             logger.Debug("Start server handler");
             server.Start(IPAddress.Any, 8888);
             server.OnClientConnected += ServerOnClientConnected;
-
-            packageManager.PackageAvailable += PackageManagerPackageAvailable;
-            packageManager.StartProcessing();
-
         }
 
         private void PackageManagerPackageAvailable(object sender, OctoPackageAvailableEventArgs e)

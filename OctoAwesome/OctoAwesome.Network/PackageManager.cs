@@ -4,32 +4,39 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reactive;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace OctoAwesome.Network
 {
-    public class PackageManager : ObserverBase<OctoNetworkEventArgs>
+    public class PackageManager : IObserver<OctoNetworkEventArgs>
     {
         public List<BaseClient> ConnectedClients { get; set; }
-
-        private readonly Logger logger;
         private Dictionary<BaseClient, Package> packages;
         public event EventHandler<OctoPackageAvailableEventArgs> PackageAvailable;
+
+
+        private readonly List<Subscription<OctoNetworkEventArgs>> subsciptions;
+        private readonly Dictionary<BaseClient, Package> packages;
+        private readonly CancellationTokenSource cancellationTokenSource;
+        private readonly ConcurrentQueue<OctoNetworkEventArgs> receivingQueue;
         private readonly MemoryStream backupStream;
-        private ConcurrentQueue<OctoNetworkEventArgs> receivedQue;
-        private Thread internalThread;
+        private readonly Logger logger;
 
         public PackageManager()
         {
-            receivedQue = new ConcurrentQueue<OctoNetworkEventArgs>();
             packages = new Dictionary<BaseClient, Package>();
-            ConnectedClients = new List<BaseClient>();
-            logger = LogManager.GetCurrentClassLogger();
+            subsciptions = new List<Subscription<OctoNetworkEventArgs>>();
+            receivingQueue = new ConcurrentQueue<OctoNetworkEventArgs>();
+            cancellationTokenSource = new CancellationTokenSource();
             backupStream = new MemoryStream();
+            logger = LogManager.GetCurrentClassLogger();
         }
 
-        public void AddConnectedClient(BaseClient client) => client.Subscribe(this);
+        public void AddConnectedClient(BaseClient client)
+        {
+           subsciptions.Add((Subscription<OctoNetworkEventArgs>)client.Subscribe(this));
+        }
 
         public void SendPackage(Package package, BaseClient client)
         {
@@ -39,89 +46,94 @@ namespace OctoAwesome.Network
             client.SendAsync(bytes, bytes.Length);
         }
 
-        public void StartProcessing()
+        public void OnNext(OctoNetworkEventArgs value)
+            => receivingQueue.Enqueue(value);
+
+        public void OnError(Exception error) => throw new NotImplementedException();
+
+        public void OnCompleted() => throw new NotImplementedException();
+
+        public Task Start()
         {
-            internalThread = new Thread(() =>
+            var task = new Task(InternalProcess, cancellationTokenSource.Token, TaskCreationOptions.LongRunning);
+            task.Start(TaskScheduler.Default);
+            return task;
+        }
+
+        public void Stop()
+        {
+            cancellationTokenSource.Cancel();
+        }
+
+        private void InternalProcess()
+        {
+            while (!cancellationTokenSource.IsCancellationRequested)
             {
-                while (true)
-                {
-                    if (receivedQue.TryDequeue(out OctoNetworkEventArgs args))
-                    {
-                        logger.Trace($"Dequeue recived data: RestQueue: {receivedQue.Count}");
-                        ClientDataAvailable(args);
-                    }
-                }
-            })
-            {
-                IsBackground = true
-            };
-            internalThread.Start();
+                if (receivingQueue.IsEmpty)
+                    continue;
+
+                if (receivingQueue.TryDequeue(out OctoNetworkEventArgs eventArgs))
+                    ClientDataAvailable(eventArgs);
+                logger.Trace($"Dequeue recived data: RestQueue: {receivedQue.Count}");
+            }
         }
 
         private void ClientDataAvailable(OctoNetworkEventArgs e)
         {
             var baseClient = e.Client;
 
-            var data = e.NetworkStream.DataAvailable(Package.HEAD_LENGTH - 0);
+            var data = e.NetworkStream.DataAvailable(Package.HEAD_LENGTH);
 
             byte[] bytes;
             bytes = new byte[e.DataCount];
 
             if (!packages.TryGetValue(baseClient, out Package package))
             {
-                int backUpOffset = 0;
+                int offset = 0;
 
                 if (backupStream.Length > 0)
                 {
                     e.DataCount += (int)backupStream.Length;
                     backupStream.Read(bytes, 0, (int)backupStream.Length);
-                    backUpOffset = (int)backupStream.Length;
+                    offset = (int)backupStream.Length;
                     backupStream.Position = 0;
                     backupStream.SetLength(0);
-                    data += (int)backupStream.Length;
                 }
 
+                data += offset;
 
                 if (data < Package.HEAD_LENGTH)
                 {
                     logger.Error($"data available not enough for new package: Data = {data}");
                     logger.Trace("Write rest to backupstream");
-                    e.NetworkStream.Read(bytes, backUpOffset, data);
+
+                    e.NetworkStream.Read(bytes, offset, data);
                     backupStream.Write(bytes, 0, data);
                     backupStream.Position = 0;
-                    return;
-                }
-
-
-                package = new Package(false);
-                logger.Trace("Can't get package, create new package " + package.UId);
-
-
-                int current = backUpOffset;
-
-                current += e.NetworkStream.Read(bytes, current, Package.HEAD_LENGTH - current);
-
-                if (current != Package.HEAD_LENGTH)
-                {
                     logger.Error($"ID = {package.UId} Package was not complete, only got: {current} bytes");
                     return;
                 }
 
+                package = new Package(false);
+
+
+                offset += e.NetworkStream.Read(bytes, offset, Package.HEAD_LENGTH - offset);
 
                 if (package.TryDeserializeHeader(bytes))
                 {
                     packages.Add(baseClient, package);
                     e.DataCount -= Package.HEAD_LENGTH;
-                    logger.Trace($"Deserialize Header (Id={package.UId} Command={package.Command} PayloadSize={package.Payload.Length})");
                 }
                 else
                 {
-                    logger.Error("Can not deserialize header");
-                    return;
+                    var exception = new InvalidDataException("Can not deserialize header with these bytes :(");
+                    logger.Error("Can not deserialize header", exception);
+                    throw exception;
                 }
+
             }
 
-            int count = package.PayloadRest();
+            int count = package.PayloadRest;
 
             if ((e.DataCount - count) < 1)
                 count = e.DataCount;
@@ -138,27 +150,12 @@ namespace OctoAwesome.Network
                 PackageAvailable?.Invoke(this, new OctoPackageAvailableEventArgs { BaseClient = baseClient, Package = package });
 
                 if (e.DataCount - count > 0)
-                {
-                    logger.Trace($"Rest data after package {package.UId}: " + (e.DataCount - count));
-                    ClientDataAvailable(new OctoNetworkEventArgs() { Client = baseClient, DataCount = (e.DataCount - count), NetworkStream = e.NetworkStream });
-                }
-            }
-            else
-            {
-                if (e.DataCount - count > 0)
-                    logger.Error($"ID = {package.UId} Restdata: " + (e.DataCount - count));
+                logger.Trace($"Rest data after package {package.UId}: " + (e.DataCount - count));
+                ClientDataAvailable(new OctoNetworkEventArgs() { Client = baseClient, DataCount = e.DataCount - count, NetworkStream = e.NetworkStream });
             }
 
             logger.Trace($"ID = {package.UId} Data Read: " + count);
         }
 
-        protected override void OnNextCore(OctoNetworkEventArgs args)
-        {
-            logger.Trace("On Next Core called with data " + args.DataCount);
-            receivedQue.Enqueue(args);
-        }
-
-        protected override void OnErrorCore(Exception error) => throw new NotImplementedException();
-        protected override void OnCompletedCore() => throw new NotImplementedException();
     }
 }

@@ -12,20 +12,30 @@ namespace OctoAwesome.Network
     {
         private Client client;
         private readonly IDefinitionManager definitionManager;
+        private readonly PackageManager packageManager;
+
         private readonly Logger logger;
         private Dictionary<uint, Awaiter> packages;
 
         public NetworkPersistenceManager(IDefinitionManager definitionManager)
         {
             client = new Client();
-            client.PackageAvailable += ClientPackageAvailable;
+            packageManager = new PackageManager();
+            packageManager.Start();
+
+            packageManager.PackageAvailable += ClientPackageAvailable;
             packages = new Dictionary<uint, Awaiter>();
             this.definitionManager = definitionManager;
             logger = LogManager.GetCurrentClassLogger();
         }
 
 
-        public NetworkPersistenceManager(string host, ushort port, IDefinitionManager definitionManager) : this(definitionManager) => client.Connect(host, port);
+        public NetworkPersistenceManager(string host, ushort port, IDefinitionManager definitionManager) 
+            : this(definitionManager)
+        {
+            client.Connect(host, port);
+            packageManager.AddConnectedClient(client);
+        }
 
         public void DeleteUniverse(Guid universeGuid)
         {
@@ -142,13 +152,13 @@ namespace OctoAwesome.Network
             client.SendPackage(package); 
         }
 
-        private void ClientPackageAvailable(object sender, Package e)
+        private void ClientPackageAvailable(object sender, OctoPackageAvailableEventArgs e)
         {
             logger.Trace($"New package available: Id={e.UId} Command = {e.Command} PayloadSize = {e.Payload.Length}");
-            if (packages.TryGetValue(e.UId, out var awaiter))
+            if (packages.TryGetValue(e.Package.UId, out var awaiter))
             {
                 logger.Trace($"Find awaiter for {e.UId}");
-                awaiter.SetResult(e.Payload, definitionManager);
+                awaiter.SetResult(e.Package.Payload, definitionManager);
             }
         }
 

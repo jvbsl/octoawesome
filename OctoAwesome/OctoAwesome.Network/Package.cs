@@ -19,6 +19,8 @@ namespace OctoAwesome.Network
 
         public bool IsComplete => internalOffset == Payload.Length;
 
+        public int PayloadRest => Payload.Length - internalOffset;
+
         private int internalOffset;
 
         public Package(ushort command, int size) : this()
@@ -56,7 +58,7 @@ namespace OctoAwesome.Network
         public int DeserializePayload(byte[] buffer, int offset, int count)
         {
             if (internalOffset + count > Payload.Length)
-                count = Payload.Length - internalOffset;
+                count = PayloadRest;
 
             Buffer.BlockCopy(buffer, offset, Payload, internalOffset, count);
             internalOffset += count;
@@ -69,9 +71,6 @@ namespace OctoAwesome.Network
             Buffer.BlockCopy(buffer, HEAD_LENGTH, Payload, 0, Payload.Length);
             internalOffset = Payload.Length;
         }
-
-        public int PayloadRest()
-            => Payload.Length - internalOffset;
 
         public int SerializePackage(byte[] buffer)
         {
