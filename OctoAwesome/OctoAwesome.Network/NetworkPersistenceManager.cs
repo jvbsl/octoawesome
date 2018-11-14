@@ -110,6 +110,7 @@ namespace OctoAwesome.Network
         {
             var awaiter = new Awaiter
             {
+                Uid = packageUId,
                 Serializable = serializable
             };
             packages.Add(packageUId, awaiter);

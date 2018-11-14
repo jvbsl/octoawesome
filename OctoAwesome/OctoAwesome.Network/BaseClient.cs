@@ -31,7 +31,7 @@ namespace OctoAwesome.Network
         {
             logger = LogManager.GetCurrentClassLogger();
 
-            sendQueue = new (byte[] data, int len)[256];
+            sendQueue = new (byte[] data, int len)[512];
             sendLock = new object();
 
             Socket = socket;
@@ -93,7 +93,7 @@ namespace OctoAwesome.Network
 
                 if (Socket.SendAsync(sendArgs))
                     return;
-
+                
                 lock (sendLock)
                 {
                     if (readSendQueueIndex < nextSendQueueWriteIndex)
@@ -146,12 +146,15 @@ namespace OctoAwesome.Network
             do
             {
                 count = internalRecivedStream.Write(e.Buffer, offset, e.BytesTransferred - offset);
+                logger.Trace($"Write: {offset} - {e.BytesTransferred - offset} count: {count}");
+                logger.Trace($"EventArgs: Count: {e.Count}, Offset: {e.Offset}");
 
                 if (count > 0)
+                {
                     Notify(new OctoNetworkEventArgs { Client = this, NetworkStream = internalRecivedStream, DataCount = count });
+                    offset += count;
+                }
 
-
-                offset += count;
             } while (offset < e.BytesTransferred);
         }
 

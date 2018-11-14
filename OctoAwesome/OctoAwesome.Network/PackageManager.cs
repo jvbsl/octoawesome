@@ -122,6 +122,7 @@ namespace OctoAwesome.Network
                 {
                     packages.Add(baseClient, package);
                     e.DataCount -= Package.HEAD_LENGTH;
+                    logger.Trace("New package deserialized Id = " + package.UId);
                 }
                 else
                 {
@@ -155,7 +156,7 @@ namespace OctoAwesome.Network
                 }
             }
 
-            logger.Trace($"ID = {package.UId} Data Read: " + count);
+            logger.Trace($"ID = {package.UId} Data Read: {count} RestData: {package.PayloadRest}");
         }
 
     }

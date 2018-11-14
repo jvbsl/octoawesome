@@ -4,6 +4,7 @@ using NLog.Config;
 using NLog.Targets;
 using OctoAwesome.Network;
 using System;
+using System.IO;
 using System.Net;
 using System.Threading;
 
@@ -20,14 +21,14 @@ namespace OctoAwesome.GameServer
         {
             var config = new LoggingConfiguration();
 
-            config.AddRule(LogLevel.Debug, LogLevel.Fatal, new ColoredConsoleTarget("octoawesome.logconsole"));
-            config.AddRule(LogLevel.Trace, LogLevel.Fatal, new FileTarget("octoawesome.logfile") { FileName = "server.log" });
+            config.AddRule(LogLevel.Debug, LogLevel.Fatal, new ColoredConsoleTarget("octoawesome.server.logconsole"));
+            config.AddRule(LogLevel.Trace, LogLevel.Fatal, new FileTarget("octoawesome.server.logfile") { FileName = Path.Combine("logs", "server.log") });
 
             LogManager.Configuration = config;
             logger = LogManager.GetCurrentClassLogger();
-            
+
             manualResetEvent = new ManualResetEvent(false);
-                        
+
             logger.Info("Server start");
             ServerHandler = new ServerHandler();
             ServerHandler.Start();
@@ -36,6 +37,6 @@ namespace OctoAwesome.GameServer
             manualResetEvent.WaitOne();
         }
 
-        
+
     }
 }

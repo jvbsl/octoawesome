@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NLog;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -11,20 +12,29 @@ namespace OctoAwesome
     public class Awaiter
     {
         public ISerializable Serializable { get; set; }
+        public bool Timeout { get; private set; }
+        public uint Uid { get; set; }
+
         private readonly ManualResetEventSlim manualReset;
-        private bool alreadyDeserialized;
+        private readonly Logger logger;
+        private bool deserialized;
 
 
         public Awaiter()
         {
             manualReset = new ManualResetEventSlim(false);
+            logger = LogManager.GetCurrentClassLogger();
         }
 
         public ISerializable WaitOn()
         {
-            if (!alreadyDeserialized)
+            if (!deserialized)
             {
                 manualReset.Wait(10000);
+                Timeout = !deserialized;
+
+                if (Timeout)
+                    logger.Error("Timeout in Awaiter for Id = " + Uid, new TimeoutException());
             }
 
 
@@ -35,8 +45,9 @@ namespace OctoAwesome
         public void SetResult(ISerializable serializable)
         {
             Serializable = serializable;
+            deserialized = true;
+            Timeout = false;
             manualReset.Set();
-            alreadyDeserialized = true;
         }
 
         public void SetResult(byte[] bytes, IDefinitionManager definitionManager)
@@ -46,8 +57,9 @@ namespace OctoAwesome
             {
                 Serializable.Deserialize(reader, definitionManager);
             }
+            deserialized = true;
+            Timeout = false;
             manualReset.Set();
-            alreadyDeserialized = true;
         }       
     }
 }

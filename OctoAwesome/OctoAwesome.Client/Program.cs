@@ -4,6 +4,7 @@ using NLog.Config;
 using NLog.Targets;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 #endregion
 
@@ -26,8 +27,8 @@ namespace OctoAwesome.Client
         {
             var config = new LoggingConfiguration();
 
-            config.AddRule(LogLevel.Debug, LogLevel.Fatal, new ColoredConsoleTarget("octoawesome.logconsole"));
-            config.AddRule(LogLevel.Trace, LogLevel.Fatal, new FileTarget("octoawesome.logfile") { FileName = "client.log" });
+            config.AddRule(LogLevel.Debug, LogLevel.Fatal, new ColoredConsoleTarget("octoawesome.client.logconsole"));
+            config.AddRule(LogLevel.Trace, LogLevel.Fatal, new FileTarget("octoawesome.client.logfile") { FileName = Path.Combine("logs", "client.log") });
 
             LogManager.Configuration = config;
             logger = LogManager.GetCurrentClassLogger();
