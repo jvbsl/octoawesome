@@ -27,7 +27,7 @@ namespace OctoAwesome.Client
         {
             var config = new LoggingConfiguration();
 
-            config.AddRule(LogLevel.Debug, LogLevel.Fatal, new ColoredConsoleTarget("octoawesome.client.logconsole"));
+            config.AddRule(LogLevel.Error, LogLevel.Fatal, new ColoredConsoleTarget("octoawesome.client.logconsole"));
             config.AddRule(LogLevel.Trace, LogLevel.Fatal, new FileTarget("octoawesome.client.logfile") { FileName = Path.Combine("logs", "client.log") });
 
             LogManager.Configuration = config;

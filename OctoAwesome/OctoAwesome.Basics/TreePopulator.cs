@@ -31,7 +31,8 @@ namespace OctoAwesome.Basics
         }
 
         public override void Populate(IResourceManager resourceManager, IPlanet planet, IChunkColumn column00, IChunkColumn column10, IChunkColumn column01, IChunkColumn column11)
-         {
+        {
+            return;
             // Tree Definitions initialisieren
             if (treeDefinitions == null)
             {

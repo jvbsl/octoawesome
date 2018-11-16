@@ -17,11 +17,6 @@ namespace OctoAwesome.Network
 
         public uint UId { get; set; }
 
-        public bool IsComplete => internalOffset == Payload.Length;
-
-        public int PayloadRest => Payload.Length - internalOffset;
-
-        private int internalOffset;
 
         public Package(ushort command, int size) : this()
         {
@@ -51,25 +46,7 @@ namespace OctoAwesome.Network
             Command = (ushort)((buffer[0] << 8) | buffer[1]);
             Payload = new byte[BitConverter.ToInt32(buffer, 2)];
             UId = BitConverter.ToUInt32(buffer, 6);
-            internalOffset = 0;
             return true;
-        }
-
-        public int DeserializePayload(byte[] buffer, int offset, int count)
-        {
-            if (internalOffset + count > Payload.Length)
-                count = PayloadRest;
-
-            Buffer.BlockCopy(buffer, offset, Payload, internalOffset, count);
-            internalOffset += count;
-
-            return count;
-        }
-        public void DeserializePackage(byte[] buffer)
-        {
-            TryDeserializeHeader(buffer);
-            Buffer.BlockCopy(buffer, HEAD_LENGTH, Payload, 0, Payload.Length);
-            internalOffset = Payload.Length;
         }
 
         public int SerializePackage(byte[] buffer)

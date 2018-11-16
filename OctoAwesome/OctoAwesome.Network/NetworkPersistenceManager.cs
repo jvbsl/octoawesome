@@ -21,9 +21,7 @@ namespace OctoAwesome.Network
         {
             client = new Client();
             packageManager = new PackageManager();
-            packageManager.Start();
-
-            packageManager.PackageAvailable += ClientPackageAvailable;
+            
             packages = new Dictionary<uint, Awaiter>();
             this.definitionManager = definitionManager;
             logger = LogManager.GetCurrentClassLogger();
@@ -34,7 +32,7 @@ namespace OctoAwesome.Network
             : this(definitionManager)
         {
             client.Connect(host, port);
-            packageManager.AddConnectedClient(client);
+            client.PackageAvailable += ClientPackageAvailable;
         }
 
         public void DeleteUniverse(Guid universeGuid)

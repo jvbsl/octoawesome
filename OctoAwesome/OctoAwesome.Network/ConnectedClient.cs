@@ -8,9 +8,6 @@ namespace OctoAwesome.Network
 {
     public class ConnectedClient : BaseClient
     {
-        private static int received;
-        
-
         public ConnectedClient(Socket socket) : base(socket)
         {
 

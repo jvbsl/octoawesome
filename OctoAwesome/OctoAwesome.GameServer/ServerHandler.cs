@@ -31,8 +31,6 @@ namespace OctoAwesome.GameServer
 
         public void Start()
         {
-            packageManager.PackageAvailable += PackageManagerPackageAvailable;
-            packageManager.Start();
 
             logger.Debug("Start server handler");
             server.Start(IPAddress.Any, 8888);
@@ -63,7 +61,7 @@ namespace OctoAwesome.GameServer
         private void ServerOnClientConnected(object sender, ConnectedClient e)
         {
             logger.Debug("Hurra ein neuer Spieler");
-            packageManager.AddConnectedClient(e);
+            e.PackageAvailable += PackageManagerPackageAvailable;
         }
 
     }
