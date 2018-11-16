@@ -113,5 +113,14 @@ namespace OctoAwesome
         /// <param name="resources">Ein <see cref="ushort"/>-Array, das alle Ressourcen enthält</param>
         void SetBlockResources(int x, int y, int z, ushort[] resources);
 
+        /// <summary>
+        /// Verhindert aufrufen des <see cref="Changed"/>-Events bis zum aufruf von <see cref="ResumeUpdate"/>.
+        /// </summary>
+        void SuspendUpdate();
+
+        /// <summary>
+        /// Setzt das aufrufen des <see cref="Changed"/>-Events fort.
+        /// </summary>
+        void ResumeUpdate();
     }
 }

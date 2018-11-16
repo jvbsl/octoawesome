@@ -133,5 +133,27 @@
             y %= Chunk.CHUNKSIZE_Y;
             return column.GetBlock(x, y, z);
         }
+        
+        /// <summary>
+        /// Verhindert aufrufen des <see cref="Chunk.Changed"/>-Events bis zum aufruf von <see cref="ResumeUpdate"/>.
+        /// </summary>
+        public void SuspendUpdate()
+        {
+            column00.SuspendUpdate();
+            column01.SuspendUpdate();
+            column10.SuspendUpdate();
+            column11.SuspendUpdate();
+        }
+
+        /// <summary>
+        /// Setzt das aufrufen des <see cref="Chunk.Changed"/>-Events fort.
+        /// </summary>
+        public void ResumeUpdate()
+        {
+            column00.ResumeUpdate();
+            column01.ResumeUpdate();
+            column10.ResumeUpdate();
+            column11.ResumeUpdate();
+        }
     }
 }

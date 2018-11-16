@@ -111,5 +111,15 @@ namespace OctoAwesome
         void SetBlockResources(int x, int y, int z, ushort[] resources);
 
         event Action<IChunk, int> Changed;
+
+        /// <summary>
+        /// Verhindert aufrufen des <see cref="Changed"/>-Events bis zum aufruf von <see cref="ResumeUpdate"/>.
+        /// </summary>
+        void SuspendUpdate();
+
+        /// <summary>
+        /// Setzt das aufrufen des <see cref="Changed"/>-Events fort.
+        /// </summary>
+        void ResumeUpdate();
     }
 }

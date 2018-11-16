@@ -218,6 +218,20 @@ namespace OctoAwesome
             Chunks[index].SetBlockResources(x, y, z, resources);
         }
 
+        /// <inheritdoc />
+        public void SuspendUpdate()
+        {
+            foreach(var chunk in Chunks)
+                chunk.SuspendUpdate();
+        }
+
+        /// <inheritdoc />
+        public void ResumeUpdate()
+        {
+            foreach(var chunk in Chunks)
+                chunk.ResumeUpdate();
+        }
+
         /// <summary>
         /// Serialisiert die Chunksäule in den angegebenen Stream.
         /// </summary>

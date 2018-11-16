@@ -32,7 +32,6 @@ namespace OctoAwesome.Basics
 
         public override void Populate(IResourceManager resourceManager, IPlanet planet, IChunkColumn column00, IChunkColumn column10, IChunkColumn column01, IChunkColumn column11)
         {
-            return;
             // Tree Definitions initialisieren
             if (treeDefinitions == null)
             {
@@ -41,6 +40,11 @@ namespace OctoAwesome.Basics
                     treeDefinition.Init(resourceManager.DefinitionManager);
             }
 
+            column00.SuspendUpdate();
+            column01.SuspendUpdate();
+            column10.SuspendUpdate();
+            column11.SuspendUpdate();
+            
             int salt = (column00.Index.X & 0xffff) + ((column00.Index.Y & 0xffff) << 16);
             Random random = new Random(planet.Seed + salt);
 
@@ -66,6 +70,11 @@ namespace OctoAwesome.Basics
                     treeDefinition.PlantTree(resourceManager.DefinitionManager, planet, new Index3(x, y, z), builder, random.Next(int.MaxValue));
                 }
             }
+            
+            column00.ResumeUpdate();
+            column01.ResumeUpdate();
+            column10.ResumeUpdate();
+            column11.ResumeUpdate();
         }
     }
 }

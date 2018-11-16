@@ -55,7 +55,7 @@ namespace OctoAwesome.GameServer
                 return;
             }
 
-            packageManager.SendPackage(e.Package, e.BaseClient);
+            //packageManager.SendPackage(e.Package, e.BaseClient);
         }
 
         private void ServerOnClientConnected(object sender, ConnectedClient e)

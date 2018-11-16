@@ -172,7 +172,7 @@ namespace OctoAwesome.Network
         private void FinalizePackage()
         {
             _offset = 0;
-                
+            
             logger.Trace($"ID = {_package.UId} package is complete");
             PackageAvailable?.Invoke(this, new OctoPackageAvailableEventArgs { BaseClient = this, Package = _package });
         }
@@ -226,7 +226,7 @@ namespace OctoAwesome.Network
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine("$Payload read exc: {payloadOffset}/{payload.Length}");
+                        Console.WriteLine($"Payload read exc: {payloadOffset}/{payload.Length}");
                         throw;
                     }
                     if (res < 0)
