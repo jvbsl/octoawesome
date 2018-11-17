@@ -28,10 +28,9 @@ namespace OctoAwesome
 
         public ISerializable WaitOn()
         {
-            if (!deserialized)
+            while (!deserialized)
             {
-                manualReset.Wait(10000);
-                Timeout = !deserialized;
+                Timeout = !manualReset.Wait(10000);
 
                 if (Timeout)
                     logger.Error("Timeout in Awaiter for Id = " + Uid, new TimeoutException());
@@ -46,7 +45,6 @@ namespace OctoAwesome
         {
             Serializable = serializable;
             deserialized = true;
-            Timeout = false;
             manualReset.Set();
         }
 
@@ -58,7 +56,6 @@ namespace OctoAwesome
                 Serializable.Deserialize(reader, definitionManager);
             }
             deserialized = true;
-            Timeout = false;
             manualReset.Set();
         }       
     }

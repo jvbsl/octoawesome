@@ -29,7 +29,7 @@ namespace OctoAwesome.GameServer.Commands
 
             logger.Trace("Whoami frägt " + playername);
 
-            player.Components.AddComponent(new PositionComponent { Position = new Coordinate(0, new Index3(0, 0, 0), new Vector3(0, 0, 0)) });
+            player.Components.AddComponent(new PositionComponent { Position = new Coordinate(0, new Index3(0, 30000, 0), new Vector3(0, 0, 0)) });
 
             using (var ms = new MemoryStream())
             using (var bw = new BinaryWriter(ms))

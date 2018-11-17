@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq.Expressions;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace OctoAwesome.Network
@@ -18,7 +19,7 @@ namespace OctoAwesome.Network
         protected readonly Socket Socket;
         protected readonly SocketAsyncEventArgs ReceiveArgs;
 
-        protected readonly OctoNetworkStream internalSendStream;
+        //protected readonly OctoNetworkStream internalSendStream;
         protected readonly OctoNetworkStream internalRecivedStream;
         protected readonly Logger logger;
 
@@ -28,6 +29,9 @@ namespace OctoAwesome.Network
         private readonly SocketAsyncEventArgs sendArgs;
         private readonly (byte[] data, int len)[] sendQueue;
         private readonly object sendLock;
+
+        private readonly Stream DataFileSend;
+        private readonly Stream DataFileReceive;
 
         protected BaseClient(Socket socket)
         {
@@ -46,24 +50,25 @@ namespace OctoAwesome.Network
             sendArgs = new SocketAsyncEventArgs();
             sendArgs.Completed += OnSent;
 
-            internalSendStream = new OctoNetworkStream();
             internalRecivedStream = new OctoNetworkStream();
+            
+            DataFileSend = new FileStream(Assembly.GetEntryAssembly().Location + ".Sent.dat", FileMode.Create, FileAccess.Write);
+            DataFileReceive = new FileStream(Assembly.GetEntryAssembly().Location + ".Received.dat", FileMode.Create, FileAccess.Write);
 
         }
 
         public void Start()
         {
-            while (true)
-            {
-                if (Socket.ReceiveAsync(ReceiveArgs))
-                    return;
-                Receive(ReceiveArgs);
-            }
+            if (Socket.ReceiveAsync(ReceiveArgs))
+                return;
+            Receive(ReceiveArgs);
+                
         }
 
         public void SendAsync(byte[] data, int len)
         {
             logger.Trace("Send async length " + len);
+
             lock (sendLock)
             {
                 if (sending)
@@ -77,15 +82,23 @@ namespace OctoAwesome.Network
 
             SendInternal(data, len);
         }
+
+        public void EndSend(IAsyncResult res)
+        {
+            int sent = Socket.EndSend(res);
+            
+        }
+        
         private void SendInternal(byte[] data, int len)
         {
             while (true)
             {
+                
                 sendArgs.SetBuffer(data, 0, len);
 
                 if (Socket.SendAsync(sendArgs))
                     return;
-                
+
                 lock (sendLock)
                 {
                     if (readSendQueueIndex < nextSendQueueWriteIndex)
@@ -105,6 +118,9 @@ namespace OctoAwesome.Network
 
         private void OnSent(object sender, SocketAsyncEventArgs e)
         {
+            
+            DataFileSend.Write(e.Buffer, e.Offset, e.BytesTransferred);
+            DataFileSend.Flush();
             byte[] data;
             int len;
             lock (sendLock)
@@ -127,6 +143,7 @@ namespace OctoAwesome.Network
 
         protected void Receive(SocketAsyncEventArgs e)
         {
+            logger.Debug("BytesTransferred: " + e.BytesTransferred + ", " + e.SocketError);
             if (e.BytesTransferred < 1)
                 return;
 
@@ -148,19 +165,16 @@ namespace OctoAwesome.Network
                 offset += count;
 
             } while (offset < e.BytesTransferred);
+            
+            if (!Socket.ReceiveAsync(e))
+            {
+                Receive(e); //TODO: solve recursion?
+            }
         }
 
         private void OnReceived(object sender, SocketAsyncEventArgs e)
         {
             Receive(e);
-
-            while (Socket.Connected)
-            {
-                if (Socket.ReceiveAsync(ReceiveArgs))
-                    return;
-
-                Receive(ReceiveArgs);
-            }
         }
 
     
@@ -192,16 +206,15 @@ namespace OctoAwesome.Network
                         Console.WriteLine($"Header read exc: {_offset}");
                         throw;
                     }
-                    if (res < 0)
-                    {
-                        throw new NotSupportedException();
-                    }
 
                     if (res == 0)
                         return; // not complete and no data available
                     if (res < 0)
                         throw new NotSupportedException();
 
+                    DataFileReceive.Write(_headerBuffer, _offset, res);
+                    DataFileReceive.Flush();
+                    
                     _offset += res;
                 } while (_offset < Package.HEAD_LENGTH);
 
@@ -211,7 +224,10 @@ namespace OctoAwesome.Network
                     throw new InvalidDataException("Can not deserialize header with these bytes :(");
 
                 if (_package.Payload.Length == 0)
+                {
                     FinalizePackage();
+                    return;
+                }
             }
 
             var payload = _package.Payload;
@@ -238,6 +254,9 @@ namespace OctoAwesome.Network
                         return; // not complete and no data available
                     if (res < 0)
                         throw new NotSupportedException();
+                    
+                    DataFileReceive.Write(payload, payloadOffset, res);
+                    DataFileReceive.Flush();
 
                     _offset += res;
                     payloadOffset += res;

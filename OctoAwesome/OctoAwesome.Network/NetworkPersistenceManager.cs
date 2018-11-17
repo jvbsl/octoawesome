@@ -15,7 +15,7 @@ namespace OctoAwesome.Network
         private readonly PackageManager packageManager;
 
         private readonly Logger logger;
-        private Dictionary<uint, Awaiter> packages;
+        internal static Dictionary<uint, Awaiter> packages;//TODO: back to normal, just for debugging
 
         public NetworkPersistenceManager(IDefinitionManager definitionManager)
         {
@@ -112,6 +112,8 @@ namespace OctoAwesome.Network
                 Serializable = serializable
             };
             packages.Add(packageUId, awaiter);
+            
+            logger.Debug("New Awaiters: " + packageUId);
 
             return awaiter;
         }
@@ -156,7 +158,7 @@ namespace OctoAwesome.Network
             logger.Trace($"New package available: Id={e.Package.UId} Command = {e.Package.Command} PayloadSize = {e.Package.Payload.Length}");
             if (packages.TryGetValue(e.Package.UId, out var awaiter))
             {
-                logger.Trace($"Find awaiter for {e.Package.UId}");
+                logger.Trace($"Found awaiter for {e.Package.UId}");
                 awaiter.SetResult(e.Package.Payload, definitionManager);
                 packages.Remove(e.Package.UId);
             }

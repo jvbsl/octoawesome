@@ -282,8 +282,11 @@ namespace OctoAwesome
                 {
                     var chunk = newChunks.Dequeue();
 
-                    foreach (var entity in chunk.ChunkColumn.Entities)
-                        simulation.AddEntity(entity);
+                    if (chunk.ChunkColumn.Entities == null)
+                        Console.WriteLine("GlobalChunkCache.cs: wtf chunk column entities null");
+                    else
+                        foreach (var entity in chunk.ChunkColumn.Entities)
+                            simulation.AddEntity(entity);
                 }
 
                 //Alte Chunks aus der Siumaltion entfernen

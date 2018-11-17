@@ -42,16 +42,20 @@ namespace OctoAwesome.Network
         private void OnClientAccepted(IAsyncResult ar)
         {
             var tmpSocket = socket.EndAccept(ar);
-            socket.BeginAccept(OnClientAccepted, null);
             tmpSocket.NoDelay = true;
 
             var client = new ConnectedClient(tmpSocket);
-            client.Start();
 
             OnClientConnected?.Invoke(this, client);
 
+            
+            client.Start();
+            
             lock (lockObj)
                 connectedClients.Add(client);
+            
+            
+            socket.BeginAccept(OnClientAccepted, null);
         }
     }
 }
