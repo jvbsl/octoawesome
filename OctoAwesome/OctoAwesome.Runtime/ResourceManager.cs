@@ -223,7 +223,7 @@ namespace OctoAwesome.Runtime
             IPlanet planet = GetPlanet(planetId);
 
             Awaiter awaiter;
-            IChunkColumn column, column11;
+            IChunkColumn column = null, column11;
 
             int timeoutCount = 0;
 
@@ -247,6 +247,9 @@ namespace OctoAwesome.Runtime
                 timeoutCount++;
 
             } while (awaiter != null && awaiter.Timeout);
+            if (persistenceManager.GetType().FullName.Contains("Network"))
+                return column11;
+            Console.WriteLine("Loaded chunk: " + column11.Index.ToString());
 
             IChunkColumn column00 = GlobalChunkCache.Peek(planet.Id, Index2.NormalizeXY(index + new Index2(-1, -1), planet.Size));
             IChunkColumn column10 = GlobalChunkCache.Peek(planet.Id, Index2.NormalizeXY(index + new Index2(0, -1), planet.Size));

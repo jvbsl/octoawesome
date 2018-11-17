@@ -3,6 +3,7 @@ using NLog;
 using OctoAwesome.Network;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -57,9 +58,10 @@ namespace OctoAwesome.GameServer
 
             packageManager.SendPackage(e.Package, e.BaseClient);
         }
-
+        private List<BaseClient> connectedClients = new List<BaseClient>();
         private void ServerOnClientConnected(object sender, ConnectedClient e)
         {
+            connectedClients.Add(e);
             logger.Debug("Hurra ein neuer Spieler");
             e.PackageAvailable += PackageManagerPackageAvailable;
         }

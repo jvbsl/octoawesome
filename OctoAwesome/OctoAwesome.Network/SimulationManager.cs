@@ -2,6 +2,7 @@
 using OctoAwesome.Runtime;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -11,6 +12,9 @@ namespace OctoAwesome.Network
 {
     public class SimulationManager
     {
+
+        public event EventHandler<IChunkColumn> SaveChunkColumn;
+
         public bool IsRunning { get; private set; }
         public IDefinitionManager DefinitionManager => definitionManager;
 
@@ -43,6 +47,7 @@ namespace OctoAwesome.Network
 
         private Thread backgroundThread;
         private object mainLock;
+        
 
         public SimulationManager(ISettings settings)
         {
@@ -94,10 +99,10 @@ namespace OctoAwesome.Network
             throw new NotImplementedException();
         }
 
-        public IPlanet GetPlanet(int planetId) => ResourceManager.GetPlanet(planetId);
+        public IPlanet GetPlanet(int planetId) => ResourceManager.GlobalChunkCache.GetPlanet(planetId);
 
         public IChunkColumn LoadColumn(Guid guid, int planetId, Index2 index2) 
-            => ResourceManager.LoadChunkColumn(planetId, index2);
+            => ResourceManager.GlobalChunkCache.Subscribe(planetId, index2, false);
 
         private void SimulationLoop()
         {

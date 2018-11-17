@@ -162,6 +162,10 @@ namespace OctoAwesome.Network
                 awaiter.SetResult(e.Package.Payload, definitionManager);
                 packages.Remove(e.Package.UId);
             }
+            else if (e.Package.Command == (ushort)OfficialCommands.SaveColumn)
+            {
+
+            }
             else
             {
                 logger.Info($"No awaiter for {e.Package.UId}");

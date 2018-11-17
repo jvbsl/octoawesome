@@ -55,7 +55,7 @@ namespace OctoAwesome.GameServer.Commands
             {
                 chunkColumn.Deserialize(reader, Program.ServerHandler.SimulationManager.DefinitionManager);
             }
-            logger.Trace($"Save column [{chunkColumn.Index.ToString()}]");
+            logger.Debug($"Save column [{chunkColumn.Index.ToString()}]");
             Program.ServerHandler.SimulationManager.Simulation.ResourceManager.SaveChunkColumn(chunkColumn);
 
             return null;

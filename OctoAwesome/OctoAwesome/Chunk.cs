@@ -141,7 +141,7 @@ namespace OctoAwesome
             Blocks[index] = block;
             MetaData[index] = meta;
             ChangeCounter++;
-            if (!suspended)
+            if (suspendCount == 0)
                 Changed?.Invoke(this, ChangeCounter);
         }
 
@@ -168,7 +168,7 @@ namespace OctoAwesome
         {
             MetaData[GetFlatIndex(x, y, z)] = meta;
             ChangeCounter++;
-            if (!suspended)
+            if (suspendCount == 0)
                 Changed?.Invoke(this, ChangeCounter);
         }
 
@@ -195,7 +195,7 @@ namespace OctoAwesome
         {
             Resources[GetFlatIndex(x, y, z)] = resources;
             ChangeCounter++;
-            if (!suspended)
+            if (suspendCount == 0)
                 Changed?.Invoke(this, ChangeCounter);
         }
 
@@ -216,21 +216,20 @@ namespace OctoAwesome
 
         public event Action<IChunk, int> Changed;
 
-        private bool suspended;
-        private int suspendCounter;
+        private int suspendCount;
+        private int lastChangeCounter;
 
         /// <inheritdoc />
         public void SuspendUpdate()
         {
-            suspendCounter = ChangeCounter;
-            suspended = true;
+            if (suspendCount++ == 0)
+                lastChangeCounter = ChangeCounter;
         }
 
         /// <inheritdoc />
         public void ResumeUpdate()
         {
-            suspended = false;
-            if (suspendCounter != ChangeCounter)
+            if (--suspendCount == 0 && lastChangeCounter != ChangeCounter)
                 Changed?.Invoke(this, ChangeCounter);
         }
     }

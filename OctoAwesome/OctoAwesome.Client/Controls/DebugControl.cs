@@ -153,7 +153,7 @@ namespace OctoAwesome.Client.Controls
             controlInfo.Text = Languages.OctoClient.ActiveControls + ": " + ScreenManager.ActiveScreen.Controls.Count;
 
             //Draw Position
-            string pos = "pos: " + Player.Position.Position.ToString();
+            string pos = "pos: " +  Player.Position.Position.ToString();
             position.Text = pos;
 
             //Draw Rotation

@@ -28,7 +28,7 @@ namespace OctoAwesome.Basics
             extensionLoader.RegisterMapGenerator(new ComplexPlanetGenerator());
 
             extensionLoader.RegisterMapPopulator(new TreePopulator());
-            extensionLoader.RegisterMapPopulator(new WauziPopulator());
+            //extensionLoader.RegisterMapPopulator(new WauziPopulator());
 
             extensionLoader.RegisterEntity<WauziEntity>();
             extensionLoader.RegisterDefaultEntityExtender<WauziEntity>();
