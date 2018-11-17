@@ -30,9 +30,6 @@ namespace OctoAwesome.Network
         private readonly (byte[] data, int len)[] sendQueue;
         private readonly object sendLock;
 
-        private readonly Stream DataFileSend;
-        private readonly Stream DataFileReceive;
-
         protected BaseClient(Socket socket)
         {
             logger = LogManager.GetCurrentClassLogger();
@@ -52,9 +49,6 @@ namespace OctoAwesome.Network
 
             internalRecivedStream = new OctoNetworkStream();
             
-            DataFileSend = new FileStream(Assembly.GetEntryAssembly().Location + ".Sent.dat", FileMode.Create, FileAccess.Write);
-            DataFileReceive = new FileStream(Assembly.GetEntryAssembly().Location + ".Received.dat", FileMode.Create, FileAccess.Write);
-
         }
 
         public void Start()
@@ -118,9 +112,6 @@ namespace OctoAwesome.Network
 
         private void OnSent(object sender, SocketAsyncEventArgs e)
         {
-            
-            DataFileSend.Write(e.Buffer, e.Offset, e.BytesTransferred);
-            DataFileSend.Flush();
             byte[] data;
             int len;
             lock (sendLock)
@@ -211,9 +202,6 @@ namespace OctoAwesome.Network
                         return; // not complete and no data available
                     if (res < 0)
                         throw new NotSupportedException();
-
-                    DataFileReceive.Write(_headerBuffer, _offset, res);
-                    DataFileReceive.Flush();
                     
                     _offset += res;
                 } while (_offset < Package.HEAD_LENGTH);
@@ -254,9 +242,6 @@ namespace OctoAwesome.Network
                         return; // not complete and no data available
                     if (res < 0)
                         throw new NotSupportedException();
-                    
-                    DataFileReceive.Write(payload, payloadOffset, res);
-                    DataFileReceive.Flush();
 
                     _offset += res;
                     payloadOffset += res;
