@@ -56,7 +56,7 @@ namespace OctoAwesome.Client.Components
             float strafeY = -(float)Math.Sin(head.Angle + MathHelper.PiOver2);
 
             CameraUpVector = Vector3.Cross(new Vector3(strafeX, strafeY, 0), new Vector3(lookX, lookY, height));
-
+            
             View = Matrix.CreateLookAt(
                 CameraPosition,
                 new Vector3(

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Windows.Forms;
 using engenious.UI;
 using KeyEventArgs = engenious.UI.KeyEventArgs;
 using Keys = engenious.Input.Keys;

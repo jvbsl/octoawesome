@@ -54,6 +54,8 @@ namespace OctoAwesome.Client.Controls
 
         private Thread[] _additionalRegenerationThreads;
 
+        private readonly CancellationTokenSource backgroundThreadsCancellation;
+
         public RenderTarget2D MiniMapTexture { get; set; }
         public RenderTarget2D ControlTexture { get; set; }
 
@@ -156,15 +158,20 @@ namespace OctoAwesome.Client.Controls
                     orderedChunkRenderer.Add(renderer);
                 }
             }
+            
+            backgroundThreadsCancellation = new CancellationTokenSource();
+            
+            var forceUpdateToken = backgroundThreadsCancellation.Token;
+            forceUpdateToken.Register(() => forceResetEvent.Set());
 
-            backgroundThread = new Thread(BackgroundLoop)
+            backgroundThread = new Thread(() => BackgroundLoop(backgroundThreadsCancellation.Token))
             {
                 Priority = ThreadPriority.Lowest,
                 IsBackground = true
             };
             backgroundThread.Start();
 
-            backgroundThread2 = new Thread(ForceUpdateBackgroundLoop)
+            backgroundThread2 = new Thread(() => ForceUpdateBackgroundLoop(forceUpdateToken))
             {
                 Priority = ThreadPriority.Lowest,
                 IsBackground = true
@@ -183,7 +190,7 @@ namespace OctoAwesome.Client.Controls
             _additionalRegenerationThreads = new Thread[additional];
             for (int i = 0; i < additional; i++)
             {
-                var t = new Thread(AdditionalFillerBackgroundLoop)
+                var t = new Thread((obj) => AdditionalFillerBackgroundLoop(obj, backgroundThreadsCancellation.Token))
                 {
                     Priority = ThreadPriority.Lowest,
                     IsBackground = true
@@ -408,7 +415,7 @@ namespace OctoAwesome.Client.Controls
                 //Matrix.CreateRotationY((((float)gameTime.TotalGameTime.TotalMinutes * MathHelper.TwoPi) + playerPosX) * -1); 
                 Matrix.CreateRotationY((float)(MathHelper.TwoPi - ((diff.TotalDays * octoDaysPerEarthDay * MathHelper.TwoPi) % MathHelper.TwoPi)));
 
-            Vector3 sunDirection = Vector3.Transform(new Vector3(0, 0, 1), sunMovement);
+            Vector3 sunDirection = Vector3.Transform(sunMovement, new Vector3(0, 0, 1));
 
             simpleShader.Parameters["DiffuseColor"].SetValue(new Color(190, 190, 190));
             simpleShader.Parameters["DiffuseIntensity"].SetValue(0.6f);
@@ -607,30 +614,30 @@ namespace OctoAwesome.Client.Controls
             }
         }
 
-        private void BackgroundLoop()
+        private void BackgroundLoop(CancellationToken cancellationToken)
         {
-            while (true)
+            while (!cancellationToken.IsCancellationRequested)
             {
                 fillResetEvent.WaitOne();
                 FillChunkRenderer();
             }
         }
 
-        private void AdditionalFillerBackgroundLoop(object oArr)
+        private void AdditionalFillerBackgroundLoop(object oArr, CancellationToken cancellationToken)
         {
             var arr = (object[])oArr;
             var are = (AutoResetEvent)arr[0];
             var n = (int)arr[1];
-            while (true)
+            while (!cancellationToken.IsCancellationRequested)
             {
                 are.WaitOne();
                 RegenerateAll(n + 1);
             }
         }
 
-        private void ForceUpdateBackgroundLoop()
+        private void ForceUpdateBackgroundLoop(CancellationToken cancellationToken)
         {
-            while (true)
+            while (!cancellationToken.IsCancellationRequested)
             {
                 forceResetEvent.WaitOne();
 
@@ -692,11 +699,14 @@ namespace OctoAwesome.Client.Controls
 
             disposed = true;
 
-            backgroundThread.Abort();
-            backgroundThread2.Abort();
+            backgroundThreadsCancellation.Cancel();
+            backgroundThreadsCancellation.Dispose();
+            
+            backgroundThread.Join();
+            backgroundThread2.Join();
 
             foreach (var thread in _additionalRegenerationThreads)
-                thread.Abort();
+                thread.Join();
 
             foreach (var cr in chunkRenderer)
                 cr.Dispose();

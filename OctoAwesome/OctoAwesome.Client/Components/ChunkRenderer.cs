@@ -4,8 +4,8 @@ using engenious.Graphics;
 using System.Linq;
 using engenious;
 using System;
-using System.Windows.Threading;
 using System.Threading;
+using engenious.Helper;
 using OctoAwesome.Threading;
 
 namespace OctoAwesome.Client.Components
@@ -16,7 +16,6 @@ namespace OctoAwesome.Client.Components
         private GraphicsDevice graphicsDevice;
 
         private Texture2DArray textures;
-        private readonly Dispatcher dispatcher;
 
         public static float OverrideLightLevel { get; set; }
         public static bool WireFrame { get; set; }
@@ -53,8 +52,6 @@ namespace OctoAwesome.Client.Components
             }
         }
 
-        public bool DispatchRequired => Thread.CurrentThread.ManagedThreadId != dispatcher.Thread.ManagedThreadId;
-
         static ChunkRenderer()
         {
             wireFrameState = new RasterizerState() { FillMode = PolygonMode.Line, CullMode = CullMode.CounterClockwise };
@@ -68,7 +65,6 @@ namespace OctoAwesome.Client.Components
             this.definitionManager = definitionManager;
             this.graphicsDevice = graphicsDevice;
             this.textures = textures;
-            dispatcher = Dispatcher.CurrentDispatcher;
             simple = simpleShader;
             GenerateIndexBuffer();
         }
@@ -114,8 +110,9 @@ namespace OctoAwesome.Client.Components
                 shift.X * Chunk.CHUNKSIZE_X,
                 shift.Y * Chunk.CHUNKSIZE_Y,
                 shift.Z * Chunk.CHUNKSIZE_Z);
+            
 
-            simple.Parameters["OverrideLightLevel"].SetValue(OverrideLightLevel);
+            simple.Parameters["OverrideLightLeve"].SetValue(OverrideLightLevel);
             simple.Parameters["WorldViewProj"].SetValue(worldViewProj);
             simple.Parameters["BlockTextures"].SetValue(textures);
 
@@ -516,19 +513,23 @@ namespace OctoAwesome.Client.Components
 
             if (vertexCount > 0)
             {
-                Dispatch(() =>
-                {
-                    if (vb == null || ib == null)
+                ThreadingHelper.OnUiThread(
+                    (target) =>
                     {
-                        vb = new VertexBuffer(graphicsDevice, VertexPositionNormalTextureLight.VertexDeclaration, vertexCount);
-                    }
-                    if (vertexCount > vb.VertexCount)
-                        vb.Resize(vertexCount);
+                        if (vb == null || ib == null)
+                        {
+                            vb = new VertexBuffer(graphicsDevice, VertexPositionNormalTextureLight.VertexDeclaration,
+                                vertexCount);
+                        }
+
+                        if (vertexCount > vb.VertexCount)
+                            vb.Resize(vertexCount);
 
 
-                    vb.SetData(vertices.ToArray());
-                });
+                        vb.SetData(vertices.ToArray());
+                    }, null);
             }
+
 
             lock (this)
             {
@@ -584,10 +585,7 @@ namespace OctoAwesome.Client.Components
 
         private void Dispatch(Action action)
         {
-            if (DispatchRequired)
-                dispatcher.Invoke(action);
-            else
-                action();
+            action();
         }
     }
 }

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net48</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     
     <DocumentationFile>..\bin\Debug\OctoAwesome.Basics.XML</DocumentationFile>
   </PropertyGroup>
@@ -13,10 +13,6 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <OutputPath>..\bin\Release\</OutputPath>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="engenious" Version="0.4.0.14-alpha" />
-  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\OctoAwesome\OctoAwesome.csproj" />

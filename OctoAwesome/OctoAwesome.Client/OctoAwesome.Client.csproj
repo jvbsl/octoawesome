@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net48</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
 
     <ApplicationIcon>octoawesome.ico</ApplicationIcon>
     <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
@@ -60,10 +60,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="engenious" Version="0.4.0.14-alpha" />
+<!--    <PackageReference Include="engenious" Version="0.4.0.14-alpha" />-->
+    <PackageReference Include="engenious" Version="0.5.0.2-alpha" />
     <PackageReference Include="engenious.ContentTool" Version="0.4.0.3-alpha" />
-    <PackageReference Include="engenious.UI" Version="0.4.0.10-alpha" />
+    <PackageReference Include="engenious.opentk" Version="4.0.0.1-pre" />
+    <PackageReference Include="engenious.UI" Version="0.5.0.2-alpha" />
+<!--    <PackageReference Include="engenious.UI" Version="0.4.0.10-alpha" />-->
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="5.0.0-preview.7.20364.11" />
+    <PackageReference Include="System.Drawing.Common" Version="5.0.0-preview.7.20364.11" />
     <PackageReference Include="System.IO" Version="4.3.0" />
     <PackageReference Include="System.IO.Compression" Version="4.3.0" />
     <PackageReference Include="System.IO.FileSystem" Version="4.3.0" />
@@ -73,9 +78,6 @@
     <ProjectReference Include="..\OctoAwesome.Network\OctoAwesome.Network.csproj" />
     <ProjectReference Include="..\OctoAwesome.Runtime\OctoAwesome.Runtime.csproj" />
     <ProjectReference Include="..\OctoAwesome\OctoAwesome.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="WindowsBase" />
   </ItemGroup>
 
 </Project>
